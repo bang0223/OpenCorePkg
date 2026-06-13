@@ -162,9 +162,23 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v6
+      
       - uses: TheMrMilchmann/setup-msvc-dev@v4
         with:
           arch: x86
+      
+      - name: Setup MSVC Path
+        shell: pwsh
+        run: |
+          $msvcPath = Get-ChildItem "C:\Program Files\Microsoft Visual Studio" -Recurse -Filter "VC" | Select-Object -First 1 -ExpandProperty FullName
+          if ($msvcPath) {
+            $msvcToolsPath = Get-ChildItem "$msvcPath\Tools\MSVC" -Directory | Sort-Object -Descending | Select-Object -First 1 -ExpandProperty FullName
+            if ($msvcToolsPath) {
+              Add-Content $env:GITHUB_ENV "MSVC_TOOLS_PATH=$msvcToolsPath"
+              Write-Output "MSVC_TOOLS_PATH=$msvcToolsPath"
+            }
+          }
+      
       - name: Install Dependencies
         run: |
           choco install make nasm zip iasl --no-progress
